@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	  <meta charset="utf-8" />
+    <title>Tumblr API Tester</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/mootools/1.2.1/mootools-yui-compressed.js" type="text/javascript" charset="utf-8"></script>
+    <style type="text/css">
+      * {
+        font-size:100%;
+      }
+      html,body{
+        margin:0;
+        padding:0;
+      }
+      body {
+        padding:15px;
+        font-size:0.8em;
+        color:#666;
+      }
+
+      #contents {
+        background:#FFF;
+        padding:0.8em;
+      }
+
+      input, select {
+        border:none;
+        border-bottom:1px solid #666;
+        margin:0;
+        padding:0;
+        background:#EEE;
+      }
+
+      p.domain {
+      }
+
+      p.point {
+      }
+
+      p.param {
+      }
+	  ul#result{
+		  margin:0;
+		  padding:0;
+	  }
+	  #result li.type_quote,
+	  #result li.type_regular {
+		  list-style:none;
+		  width:650px;
+		  font-family:"Trebuchet MS",Tahoma,Verdana,Helvetica,Arial,sans-serif;
+		  margin:10px 0;
+      }
+	  #result li.type_quote div p,
+	  #result li.type_regular div p {
+		  font-size:12px;
+		  margin:0;
+		  padding:10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="contents">
+      <p class="domain">http://<input id="username" type="text" value="matuka">.tumblr.com</p>
+      <p class="point">/api/read</p>
+      <p class="param">
+      type: 
+      <select id="type">
+        <option></option>
+        <option>text</option>
+        <option selected>quote</option>
+        <option>photo</option>
+        <option>link</option>
+        <option>chat</option>
+        <option>video</option>
+        <option>audio</option>
+      </select>
+      </p>
+      <p class="send">
+        <button onclick="firstread()">send</button>
+        <button onclick="next()">next</button>
+      </p>
+	<script type="text/javascript">
+	function color_flip(){
+		var flip = true;
+		$$('#result li.type_quote div').each(function(div){
+			div.setStyle('background', (flip ? '#f3f3f2' : '#d4dcd6'));
+			flip = !flip;
+		});
+	}
+    </script>
+    
+    <script type="text/javascript">
+	  var page = 0;
+	  var perpage = 20;
+      function read(){
+        new Element('script', {
+          type: 'text/javascript',
+          src: 'http://' + $('username').get('value') + '.tumblr.com' + 
+            '/api/read/json' + '?' + 
+            'type=' + $('type').get('value') + '&' +
+			'start=' + (page * perpage) + '&'+
+			'num=' + perpage + '&'+
+            //'filter=text&' + 
+            'callback=update'
+        }).inject(document.getElement('head'));
+      }
+	  function next(){
+		  page++;
+		  read();
+	  }
+	  function firstread(){
+        	$('result').empty();
+		  page=0;
+		  read();
+	  }	  
+    </script>
+    <ul id="result"></ul>
+    <script type="text/javascript">
+      function update(data) {
+        data.posts.each(function(post){
+          new Element('li', {class: 'type_'+post['type']}).adopt(content(post)).inject('result');
+        });
+		color_flip();
+      }
+      function content(post){
+        var result = new Element('div');
+        switch(post['type']) {
+          case 'regular' :
+            new Element('div', {html: post['regular-body']}).inject(result);
+            break;
+          case 'quote' :
+            new Element('p', {html: post['quote-text'].replace(/<\/?(span|strong|a)[^>]*>/g, '')}).inject(result);
+            new Element('p', {html: post['quote-source']}).inject(result);
+            break;
+          case 'photo' :
+            new Element('p').adopt(new Element('img', {src: post['photo-url-500']})).inject(result);
+          case 'link' :
+            break;
+          case 'chat' :
+            break;
+          case 'video' :
+            break;
+          case 'audio' :
+            break;
+          default :
+            break;
+        }
+        return result;
+      }
+    </script>
+    <p class="send">
+        <button onclick="next()">next</button>
+    </p>
+    </div>
+  </body>
+</html>
